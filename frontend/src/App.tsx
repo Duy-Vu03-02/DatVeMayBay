@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Header from "./page/Header/Header";
 import Manager from "./page/Manager/Manager";
-import Register from "./page/Register/Register";
+import BookTickets from "./page/BookTckets/BookTickets";
 
 export default function App() {
   return (
@@ -12,7 +12,7 @@ export default function App() {
           element={
             <>
               <Header />
-              <Register />
+              <BookTickets />
             </>
           }
         />
