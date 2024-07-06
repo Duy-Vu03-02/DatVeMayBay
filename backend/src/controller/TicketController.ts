@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { TicketModel } from "../model/TicketModel";
 import { UserModel } from "../model/UserModel";
 import { SoftFlightModel } from "../model/SoftFlight";
+import { verifyToken } from "../helper/authentication";
 
 export const getAllTicket = async (req: Request, res: Response) => {
   try {
@@ -53,15 +54,16 @@ export const registerTicket = async (req: Request, res: Response) => {
           { new: true }
         );
 
-        const updateTicket = await TicketModel.findByIdAndUpdate(
-          idTicket,
-          {
-            $inc: { quantity: -1 },
-          },
-          { new: true }
-        );
-        if (newSoftFlight && update && updateTicket) {
-          return res.status(200).json({ user: update, ticket: updateTicket });
+        // Xác nhận thanh toán mới trừ
+        // const updateTicket = await TicketModel.findByIdAndUpdate(
+        //   idTicket,
+        //   {
+        //     $inc: { quantity: -1 },
+        //   },
+        //   { new: true }
+        // );
+        if (newSoftFlight && update) {
+          return res.status(200).json({ user: update });
         }
       }
     }
@@ -74,24 +76,35 @@ export const registerTicket = async (req: Request, res: Response) => {
 
 export const getTicketByUser = async (req: Request, res: Response) => {
   try {
-    const { userID } = req.body;
-    if (userID && userID.trim() !== "") {
-      const user = await UserModel.findById(userID);
-      if (user) {
-        const listTicket = user.flight;
-        if (listTicket.length > 0) {
-          let result: any[];
+    const token = req.cookies.token;
+    if (token && token !== null && token.trim() !== "") {
+      const verify = await verifyToken(token);
+      if (!verify) {
+        return res.sendStatus(204);
+      }
 
-          for (let i = 0; i < listTicket.length; i++) {
-            const ticket = await TicketModel.findById(listTicket[i]);
-            if (ticket) {
-              result.push(ticket);
+      const payloadBase64 = token.split(".")[1];
+      const payload: any = await JSON.parse(atob(payloadBase64));
+
+      if (payload?.phone) {
+        const user = await UserModel.findOne({ phone: payload.phone });
+        if (user && user.username == payload.username) {
+          const listTicket = user.flight;
+          if (listTicket.length > 0) {
+            let result: any[] = [];
+
+            for (let i = 0; i < listTicket.length; i++) {
+              const ticket = await TicketModel.findById(listTicket[i].idTicket);
+              if (ticket) {
+                result.push(ticket);
+              }
             }
+            return res.status(200).json(result);
           }
-          return res.status(200).json(result);
         }
       }
     }
+
     return res.sendStatus(304);
   } catch (err) {
     console.error(err);

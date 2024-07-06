@@ -1,4 +1,5 @@
 import React, { useState, useContext, Dispatch } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./header.css";
 import { UserContext } from "../../Context/UserContext";
 import { MdClose } from "react-icons/md";
@@ -6,6 +7,7 @@ import axios from "axios";
 import { RiH5 } from "react-icons/ri";
 
 const Header = React.memo(() => {
+  const navigate = useNavigate();
   const [showLogin, setShowLogin] = useState(false);
   const { userData, setUserData } = useContext(UserContext) as {
     userData: any;
@@ -19,6 +21,20 @@ const Header = React.memo(() => {
   const handleChangeShowRegister = (value: boolean) => {
     setShowRegister(value);
   };
+  const handleLogout = async () => {
+    try {
+      const url = "http://192.168.41.26:8080/auth/user/logout";
+      const result = await axios.post(url, {}, { withCredentials: true });
+      if (result.status === 200) {
+        setUserData(null);
+        navigate("/");
+        window.history.go();
+      }
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+  };
 
   return (
     <>
@@ -29,10 +45,21 @@ const Header = React.memo(() => {
           </div>
 
           <div className="right-header d-flex align-items-center">
-            <button className="btn m-auto">Đặt Vé</button>
-            <a href="/manager">
-              <button className="btn m-auto mx-2">Quản Lý Vé</button>
-            </a>
+            <button className="btn m-auto">
+              <Link style={{ color: "black", textDecoration: "none" }} to="/">
+                Đặt Vé
+              </Link>
+            </button>
+
+            <button className="btn m-auto mx-2">
+              <Link
+                to={userData && userData.phone ? "/manager" : "/"}
+                style={{ color: "black", textDecoration: "none" }}
+              >
+                Quản Lý Vé
+              </Link>
+            </button>
+
             {!userData ? (
               <>
                 <button
@@ -49,7 +76,12 @@ const Header = React.memo(() => {
                 </button>
               </>
             ) : (
-              <h5 className="btn m-auto">{userData.username}</h5>
+              <div>
+                <h5 className="btn m-auto ">{userData.username}</h5>
+                <button className="btn btn-secondary" onClick={handleLogout}>
+                  đăng xuất
+                </button>
+              </div>
             )}
           </div>
         </div>

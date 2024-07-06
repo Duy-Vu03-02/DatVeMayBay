@@ -5,9 +5,11 @@ import {
   cancelTicketByUser,
   registerTicket,
 } from "../controller/TicketController";
+import { authenUser } from "../middleware/authentication";
+
 export default (router: express.Router) => {
   router.post("/ticket/getallticket", getAllTicket);
-  router.post("/ticket/registerticket", registerTicket);
-  router.post("/ticket/getticketbyuser", getTicketByUser);
-  router.post("/ticket/canceltiketbyuser", cancelTicketByUser);
+  router.post("/ticket/registerticket", authenUser, registerTicket);
+  router.post("/ticket/getticketbyuser", authenUser, getTicketByUser);
+  router.post("/ticket/canceltiketbyuser", authenUser, cancelTicketByUser);
 };

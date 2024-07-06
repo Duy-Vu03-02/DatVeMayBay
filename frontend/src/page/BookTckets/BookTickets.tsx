@@ -83,6 +83,7 @@ const BookTickets = React.memo(() => {
                   <th>Đến</th>
                   <th>Ngày</th>
                   <th>Tình trạng</th>
+                  <th>Giá</th>
                   <th>Đặt vé</th>
                 </tr>
                 {listFly.map((item: any, index) => (
@@ -94,13 +95,21 @@ const BookTickets = React.memo(() => {
                       {new Date(item.timeStart).getHours()}:00:00
                     </td>
                     <td>{item.quantity}</td>
+                    <td>{item.price}</td>
                     <td>
-                      <button
-                        onClick={() => handleBuckTicket(item._id)}
-                        className="btn btn-success"
-                      >
-                        Đặt vé
-                      </button>
+                      {userData &&
+                      userData?.flight?.some(
+                        (temp: any) => temp.idTicket === item._id
+                      ) ? (
+                        <button className="btn btn-secondary">Đã đặt</button>
+                      ) : (
+                        <button
+                          onClick={() => handleBuckTicket(item._id)}
+                          className="btn btn-success"
+                        >
+                          Đặt vé
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

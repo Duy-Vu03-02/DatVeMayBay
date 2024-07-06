@@ -25,6 +25,7 @@ const TicketSchema = new Schema(
     },
 
     quantity: { type: Number, require: true, select: true, default: 10 },
+    price: { type: Number, required: true, select: true, default: 10000 },
   },
   {
     timestamps: true,
