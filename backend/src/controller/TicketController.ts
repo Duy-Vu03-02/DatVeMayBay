@@ -3,6 +3,7 @@ import { TicketModel } from "../model/TicketModel";
 import { UserModel } from "../model/UserModel";
 import { SoftFlightModel } from "../model/SoftFlight";
 import { verifyToken } from "../helper/authentication";
+import _ from "lodash";
 
 export const getAllTicket = async (req: Request, res: Response) => {
   try {
@@ -92,12 +93,23 @@ export const getTicketByUser = async (req: Request, res: Response) => {
           const listTicket = user.flight;
           if (listTicket.length > 0) {
             let result: any[] = [];
-
+            let temp: any;
             for (let i = 0; i < listTicket.length; i++) {
               const ticket = await TicketModel.findById(listTicket[i].idTicket);
+              console.log(ticket);
               if (ticket) {
-                result.push(ticket);
+                temp = ticket;
               }
+
+              if (listTicket[i].idSoftFlight) {
+                const softFlight = await SoftFlightModel.findById(
+                  listTicket[i].idSoftFlight
+                );
+                if (!softFlight) {
+                }
+              }
+
+              result.push(temp);
             }
             return res.status(200).json(result);
           }

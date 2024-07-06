@@ -10,9 +10,13 @@ const UserSchema = new Schema(
     phone: { type: String, require: true, select: true },
     flight: [
       {
-        idTicket: { type: Schema.Types.ObjectId, ref: "Ticket" },
-        idSoftFlight: { type: Schema.Types.ObjectId, ref: "SoftFlight" },
-        confirm: { type: Boolean, default: false },
+        idTicket: { type: Schema.Types.ObjectId, ref: "Ticket", select: true },
+        idSoftFlight: {
+          type: Schema.Types.ObjectId,
+          ref: "SoftFlight",
+          select: true,
+        },
+        confirm: { type: Boolean, default: false, select: true },
       },
     ],
   },

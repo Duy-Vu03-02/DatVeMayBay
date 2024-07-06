@@ -20,7 +20,11 @@ const BookTickets = React.memo(() => {
       const url = "http://192.168.41.26:8080/ticket/getallticket";
       let currentDate = new Date(dayToSearch);
       currentDate.setDate(currentDate.getDate());
-      const result = await axios.post(url, { time: currentDate });
+      const result = await axios.post(
+        url,
+        { time: currentDate },
+        { withCredentials: true }
+      );
 
       if (result.status === 200) {
         setListFly(result.data);
@@ -39,7 +43,7 @@ const BookTickets = React.memo(() => {
           idUser: userData._id,
           idTicket: value,
         };
-        const result = await axios.post(url, data);
+        const result = await axios.post(url, data, { withCredentials: true });
         console.log(result);
         if (result.status === 200) {
           setUserData(result.data.user);
@@ -47,7 +51,11 @@ const BookTickets = React.memo(() => {
           const url = "http://192.168.41.26:8080/ticket/getallticket";
           let currentDate = new Date(dayToSearch);
           currentDate.setDate(currentDate.getDate());
-          const resultTicket = await axios.post(url, { time: currentDate });
+          const resultTicket = await axios.post(
+            url,
+            { time: currentDate },
+            { withCredentials: true }
+          );
 
           if (resultTicket.status === 200) {
             setListFly(resultTicket.data);
@@ -65,7 +73,8 @@ const BookTickets = React.memo(() => {
   return (
     <>
       <div className="">
-        <div className="list-ve m-5">
+        <h3 className="text-center mt-4">Đặt Vé</h3>
+        <div className="list-ve m-2">
           <div>
             <label>Chon ngay: </label>
             <input

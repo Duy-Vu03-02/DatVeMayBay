@@ -4,6 +4,7 @@ import {
   genderToken,
   verifyPassword,
   verifyToken,
+  genderRefetchToken,
 } from "../helper/authentication";
 import { UserModel } from "../model/UserModel";
 
@@ -30,11 +31,11 @@ export const login = async (req: Request, res: Response) => {
             maxAge: 1000 * 60 * 60,
           });
         }
-        const refetchToken = await genderToken(payload);
+        const refetchToken = await genderRefetchToken(payload);
         if (refetchToken) {
-          res.cookie("refetchToken", token, {
+          res.cookie("refetchToken", refetchToken, {
             httpOnly: true,
-            maxAge: 1000 * 60 * 60,
+            maxAge: 1000 * 60 * 60 * 24 * 365,
           });
         }
 

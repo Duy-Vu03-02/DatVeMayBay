@@ -28,11 +28,29 @@ export const verifyPassword = async (inputPass: string, passDB: string) => {
 
 export const genderToken = async (payload: any) => {
   try {
-    const accessSecret = process.env.ACCESS_TOKEN_JWT;
-    const token = await jwt.sign(payload, accessSecret, {
-      expiresIn: "1h",
-    });
-    return token;
+    if (payload) {
+      const accessSecret = process.env.ACCESS_TOKEN_JWT;
+      const token = await jwt.sign(payload, accessSecret, {
+        expiresIn: "5s",
+      });
+      return token;
+    }
+    return false;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+};
+
+export const genderRefetchToken = async (payload: any) => {
+  try {
+    if (payload) {
+      const accessSecret = process.env.REFETCH_TOKEN_JWT;
+      const token = await jwt.sign(payload, accessSecret, {
+        expiresIn: "60d",
+      });
+      return token;
+    }
   } catch (err) {
     console.error(err);
     return false;
@@ -42,6 +60,25 @@ export const genderToken = async (payload: any) => {
 export const verifyToken = async (token: string) => {
   try {
     const accessSecret = process.env.ACCESS_TOKEN_JWT;
+    if (token !== null) {
+      const result = await jwt.verify(token, accessSecret);
+      if (result) {
+        return true;
+      }
+    }
+    return false;
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      throw new Error(err.name);
+    }
+    console.error(err);
+    return false;
+  }
+};
+
+export const verifyRefetchToken = async (token: string) => {
+  try {
+    const accessSecret = process.env.REFETCH_TOKEN_JWT;
     if (token !== null) {
       const result = await jwt.verify(token, accessSecret);
       if (result) {

@@ -9,3 +9,7 @@ tr {
 select {
   border: none;
 }
+.tbl,
+.list-ve div:first-child {
+  margin: 0 50px;
+}

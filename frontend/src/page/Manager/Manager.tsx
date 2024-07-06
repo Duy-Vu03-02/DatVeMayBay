@@ -13,6 +13,7 @@ const Manager = React.memo(() => {
       const result = await axios.post(url, {}, { withCredentials: true });
       if (result.status === 200) {
         setListFly(result.data);
+        console.log(result.data);
       } else {
         setListFly([]);
       }
@@ -23,16 +24,8 @@ const Manager = React.memo(() => {
   return (
     <>
       <div className="">
-        <div className="list-ve m-5">
-          <div>
-            <label>Chon ngay: </label>
-            <input
-              className="border border-success m-2"
-              type="date"
-              value={dayToSearch}
-              onChange={(e) => setDayToSearch(e.target.value)}
-            />
-          </div>
+        <h3 className="text-center m-4">Quản Lý Vé</h3>
+        <div className="list-ve">
           <div className="tbl">
             <table className="table table-striped">
               <tbody>
@@ -43,6 +36,7 @@ const Manager = React.memo(() => {
                   <th>Tình trạng</th>
                   <th>Giá</th>
                   <th>Đặt vé</th>
+                  <th>Hủy vé</th>
                 </tr>
                 {listFly.map((item: any, index) => (
                   <tr key={index}>
@@ -55,7 +49,22 @@ const Manager = React.memo(() => {
                     <td>{item.quantity}</td>
                     <td>{item.price}</td>
                     <td>
-                      <button className="btn btn-success">Thanh toán</button>
+                      {item.autoCancel ? (
+                        <button className="btn btn-secondary">
+                          Tự động hủy
+                        </button>
+                      ) : (
+                        <button className="btn btn-success">Thanh toán</button>
+                      )}
+                    </td>
+                    <td>
+                      {item.autoCancel ? (
+                        <button className="btn btn-secondary">
+                          Tự động hủy
+                        </button>
+                      ) : (
+                        <button className="btn btn-danger">Hủy vé</button>
+                      )}
                     </td>
                   </tr>
                 ))}

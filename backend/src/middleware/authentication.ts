@@ -1,5 +1,10 @@
 import express, { Request, Response, NextFunction } from "express";
-import { genderToken, verifyToken } from "../helper/authentication";
+import {
+  genderToken,
+  verifyToken,
+  verifyRefetchToken,
+  genderRefetchToken,
+} from "../helper/authentication";
 import { UserModel } from "../model/UserModel";
 
 export const authenUser = async (
@@ -22,18 +27,22 @@ export const authenUser = async (
         const user = await UserModel.findOne({ phone: payload.phone });
         if (user && user.username == payload.username) {
           next();
+          return;
         }
       }
+    } else {
+      return res.sendStatus(204);
     }
-    return res.sendStatus(204);
   } catch (err) {
-    if (err.name === "TokenExpiredError") {
+    if (err.message === "TokenExpiredError") {
       const refetchToken = req.cookies.refetchToken;
       if (refetchToken && refetchToken !== null && refetchToken.trim() !== "") {
-        const verify = await verifyToken(refetchToken);
+        const verify = await verifyRefetchToken(refetchToken);
+        console.log("Verify:: ", verify);
         if (!verify) {
           return res.sendStatus(204);
         }
+        console.log("check:: s");
 
         const payloadBase64 = refetchToken.split(".")[1];
         const payload: any = await JSON.parse(atob(payloadBase64));
@@ -46,7 +55,9 @@ export const authenUser = async (
               httpOnly: true,
               maxAge: 1000 * 60 * 60,
             });
+            console.log("check");
             next();
+            return;
           }
         }
       }
