@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext, Dispatch } from "react";
+import { UserContext } from "../../Context/UserContext";
 import "./bookTickets.css";
 import axios from "axios";
 const BookTickets = React.memo(() => {
@@ -9,6 +10,10 @@ const BookTickets = React.memo(() => {
     new Date().toISOString().split("T")[0]
   );
   const [listFly, setListFly] = useState([]);
+  const { userData, setUserData } = useContext(UserContext) as {
+    userData: any;
+    setUserData: Dispatch<any>;
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -26,8 +31,21 @@ const BookTickets = React.memo(() => {
     fetch();
   }, [dayToSearch]);
 
-  const handleBuckTicket = (value: any) => {
-    console.log(value);
+  const handleBuckTicket = async (value: any) => {
+    try {
+      const url = "http://192.168.41.26:8080/ticket/registerticket";
+      const data = {
+        idUser: userData._id,
+        idTicket: value,
+      };
+      const result = await axios.post(url, data);
+      console.log(result);
+      if (result.status === 200) {
+      }
+    } catch (err) {
+      console.error(err);
+      return;
+    }
   };
 
   return (

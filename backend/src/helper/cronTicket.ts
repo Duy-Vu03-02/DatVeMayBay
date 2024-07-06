@@ -13,7 +13,7 @@ const handleCornTicket = async () => {
           for (let j = 0; j < n; j++) {
             if (i !== j) {
               let currentDate = new Date();
-              // currentDate.setDate(currentDate.getDate() + 1);
+              // currentDate.setDate(currentDate.getDate() + 4);
               const ticket = {
                 timeStart: currentDate,
                 from: {

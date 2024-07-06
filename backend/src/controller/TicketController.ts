@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { TicketModel } from "../model/TicketModel";
 import { UserModel } from "../model/UserModel";
+import { SoftFlightModel } from "../model/SoftFlight";
 
 export const getAllTicket = async (req: Request, res: Response) => {
   try {
@@ -22,6 +23,42 @@ export const getAllTicket = async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     return res.sendStatus(304);
+  }
+};
+
+export const registerTicket = async (req: Request, res: Response) => {
+  try {
+    const { idUser, idTicket } = req.body;
+    if (idTicket && idUser) {
+      const ticket = await TicketModel.findById(idTicket);
+      const user = await UserModel.findById(idUser);
+      console.log("cec");
+      if (ticket && user) {
+        console.log("ecec");
+        const softFlight = {
+          idUser: idUser,
+          idTicket: idTicket,
+        };
+        const newSoftFlight = await SoftFlightModel.create(softFlight);
+
+        await UserModel.findByIdAndUpdate(
+          idUser,
+          {
+            $push: {
+              flight: {
+                idTicket: idTicket,
+                idSoftFlight: newSoftFlight._id,
+              },
+            },
+          },
+          { new: true }
+        );
+      }
+    }
+    return res.sendStatus(304);
+  } catch (err) {
+    console.error(err);
+    return res.sendStatus(404);
   }
 };
 

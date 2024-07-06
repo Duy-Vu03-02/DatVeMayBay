@@ -11,8 +11,8 @@ const UserSchema = new Schema(
     flight: [
       {
         idTicket: { type: Schema.Types.ObjectId, ref: "Ticket" },
+        idSoftFlight: { type: Schema.Types.ObjectId, ref: "SoftFlight" },
         confirm: { type: Boolean, default: false },
-        // createdAt: { type: Date, default: Date.now, expires: 300 },
       },
     ],
   },
