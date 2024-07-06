@@ -5,22 +5,24 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import { connectionDB } from "./db/index";
 import * as dotenv from "dotenv";
+import router from "./router/index";
+import handleCornTicket from "./helper/cronTicket";
+
 dotenv.config();
 connectionDB();
+handleCornTicket();
 
 const app = express();
 app.use(
   cors({
-    origin: "*",
+    origin: ["http://localhost:3000", "http://192.168.41.26:3000"],
     credentials: true,
   })
 );
 app.use(cookieParser());
 app.use(bodyParser.json());
 
-app.use("/", (req: Request, res: Response) => {
-  return res.send("ddd");
-});
+app.use("/", router());
 
 const server = http.createServer(app);
 const port = process.env.PORT;

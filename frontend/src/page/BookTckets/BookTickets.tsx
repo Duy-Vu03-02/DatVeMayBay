@@ -10,12 +10,14 @@ const BookTickets = React.memo(() => {
       <div className="d-flex">
         <div className="list-ve">
           <table className="table table-striped">
-            <tr className="text-center">
-              <th>Từ</th>
-              <th>Đến</th>
-              <th>Ngày</th>
-              <th>Tình trạng</th>
-            </tr>
+            <tbody>
+              <tr className="text-center">
+                <th>Từ</th>
+                <th>Đến</th>
+                <th>Ngày</th>
+                <th>Tình trạng</th>
+              </tr>
+            </tbody>
           </table>
         </div>
 

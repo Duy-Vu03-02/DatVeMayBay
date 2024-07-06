@@ -6,6 +6,7 @@ const TicketSchema = new Schema(
     from: { type: String, required: true, select: true },
     to: { type: String, required: true, select: true },
     quantity: { type: Number, require: true, select: true, default: 10 },
+    page: { type: Number, require: true, select: true },
   },
   {
     timestamps: true,

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./header.css";
 import { MdClose } from "react-icons/md";
+import axios from "axios";
 
 const Header = React.memo(() => {
   const [showLogin, setShowLogin] = useState(false);
@@ -56,6 +57,34 @@ const Header = React.memo(() => {
 
 const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
   React.memo(({ handleChangeShow }) => {
+    const [infor, setInfor] = useState({
+      account: "",
+      password: "",
+    });
+
+    const handleChange = (e: any) => {
+      setInfor((prevState) => {
+        return {
+          ...prevState,
+          [e.target.name]: e.target.value,
+        };
+      });
+    };
+
+    const handleLogin = async () => {
+      try {
+        const user: any = infor;
+        if (user.username?.trim() !== "" && user.password?.trim() !== "") {
+          const url = "http://192.168.41.26:8080/auth/user/login";
+          const result = await axios.post(url, user, { withCredentials: true });
+          console.log(result);
+        }
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+    };
+
     return (
       <>
         <div className="bg-light">
@@ -75,6 +104,8 @@ const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
               </span>
               <input
                 type="text"
+                onChange={handleChange}
+                name="account"
                 className="form-control"
                 placeholder="Account"
               />
@@ -85,12 +116,16 @@ const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
               </span>
               <input
                 type="text"
+                name="password"
+                onChange={handleChange}
                 className="form-control"
                 placeholder="Password"
               />
             </div>
             <div className="d-flex justify-content-center align-items-center">
-              <button className="btn btn-success ">Đăng nhập</button>
+              <button className="btn btn-success" onClick={handleLogin}>
+                Đăng nhập
+              </button>
             </div>
           </div>
         </div>
@@ -100,6 +135,45 @@ const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
 
 const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
   React.memo(({ handleChangeShow }) => {
+    const [infor, setInfor] = useState({
+      username: "",
+      phone: "",
+      account: "",
+      password: "",
+    });
+
+    const handlChange = (e: any) => {
+      setInfor((prevState) => {
+        return {
+          ...prevState,
+          [e.target.name]: e.target.value,
+        };
+      });
+    };
+
+    const handleRegister = async () => {
+      try {
+        if (
+          infor.account?.trim() !== "" &&
+          infor.phone?.trim() !== "" &&
+          infor.username?.trim() !== "" &&
+          infor.password?.trim() !== ""
+        ) {
+          const url = "http://192.168.41.26:8080/auth/user/register";
+
+          const user = infor;
+          const result = await axios.post(url, user, { withCredentials: true });
+
+          console.log(result);
+          if (result.status === 200) {
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+    };
+
     return (
       <>
         <div className="bg-light">
@@ -119,7 +193,9 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
               </span>
               <input
                 type="text"
+                onChange={handlChange}
                 className="form-control"
+                name="username"
                 placeholder="Username"
               />
             </div>
@@ -129,6 +205,8 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
               </span>
               <input
                 type="text"
+                onChange={handlChange}
+                name="phone"
                 className="form-control"
                 placeholder="Phone number"
               />
@@ -139,6 +217,8 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
               </span>
               <input
                 type="text"
+                onChange={handlChange}
+                name="account"
                 className="form-control"
                 placeholder="Account"
               />
@@ -149,12 +229,16 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
               </span>
               <input
                 type="text"
+                name="password"
+                onChange={handlChange}
                 className="form-control"
                 placeholder="Password"
               />
             </div>
             <div className="d-flex justify-content-center align-items-center">
-              <button className="btn btn-success">Đăng ký</button>
+              <button className="btn btn-success" onClick={handleRegister}>
+                Đăng ký
+              </button>
             </div>
           </div>
         </div>
