@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useContext, Dispatch } from "react";
 import "./header.css";
+import { UserContext } from "../../Context/UserContext";
 import { MdClose } from "react-icons/md";
 import axios from "axios";
+import { RiH5 } from "react-icons/ri";
 
 const Header = React.memo(() => {
   const [showLogin, setShowLogin] = useState(false);
+  const { userData, setUserData } = useContext(UserContext) as {
+    userData: any;
+    setUserData: Dispatch<any>;
+  };
   const [showRegiser, setShowRegister] = useState(false);
 
   const handleChangeShowLogin = (value: boolean) => {
@@ -25,18 +31,24 @@ const Header = React.memo(() => {
           <div className="right-header d-flex align-items-center">
             <button className="btn m-auto">Đặt Vé</button>
             <button className="btn m-auto mx-2">Quản Lý Vé</button>
-            <button
-              className="btn m-auto"
-              onClick={() => handleChangeShowLogin(true)}
-            >
-              Đăng nhập
-            </button>
-            <button
-              className="btn a-auto mx-2"
-              onClick={() => handleChangeShowRegister(true)}
-            >
-              Đăng ký
-            </button>
+            {!userData ? (
+              <>
+                <button
+                  className="btn m-auto"
+                  onClick={() => handleChangeShowLogin(true)}
+                >
+                  Đăng nhập
+                </button>
+                <button
+                  className="btn a-auto mx-2"
+                  onClick={() => handleChangeShowRegister(true)}
+                >
+                  Đăng ký
+                </button>
+              </>
+            ) : (
+              <h5 className="btn m-auto">{userData.username}</h5>
+            )}
           </div>
         </div>
 
@@ -62,6 +74,10 @@ const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
       password: "",
     });
 
+    const { userData, setUserData } = useContext(UserContext) as {
+      userData: any;
+      setUserData: Dispatch<any>;
+    };
     const handleChange = (e: any) => {
       setInfor((prevState) => {
         return {
@@ -78,6 +94,8 @@ const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
           const url = "http://192.168.41.26:8080/auth/user/login";
           const result = await axios.post(url, user, { withCredentials: true });
           console.log(result);
+          setUserData(result.data);
+          handleChangeShow(false);
         }
       } catch (err) {
         console.error(err);
@@ -141,6 +159,10 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
       account: "",
       password: "",
     });
+    const { userData, setUserData } = useContext(UserContext) as {
+      userData: any;
+      setUserData: Dispatch<any>;
+    };
 
     const handlChange = (e: any) => {
       setInfor((prevState) => {
@@ -166,6 +188,8 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
 
           console.log(result);
           if (result.status === 200) {
+            setUserData(result.data);
+            handleChangeShow(false);
           }
         }
       } catch (err) {

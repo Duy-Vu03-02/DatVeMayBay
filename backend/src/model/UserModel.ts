@@ -12,7 +12,7 @@ const UserSchema = new Schema(
       {
         idTicket: { type: Schema.Types.ObjectId, ref: "Ticket" },
         confirm: { type: Boolean, default: false },
-        createdAt: { type: Date, default: Date.now, expires: 300 },
+        // createdAt: { type: Date, default: Date.now, expires: 300 },
       },
     ],
   },

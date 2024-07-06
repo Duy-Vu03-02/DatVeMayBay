@@ -1,14 +1,24 @@
 import express, { Request, Response } from "express";
-import { TicketModel } from "model/TicketModel";
-import { UserModel } from "model/UserModel";
+import { TicketModel } from "../model/TicketModel";
+import { UserModel } from "../model/UserModel";
 
 export const getAllTicket = async (req: Request, res: Response) => {
   try {
-    const ticket = await TicketModel.find();
-    if (ticket.length > 0) {
-      return res.status(200).json(ticket);
+    const { time } = req.body;
+    if (time) {
+      const timeStart = new Date(time);
+      timeStart.setHours(0, 0, 0, 0);
+      const timeEnd = new Date(time);
+      timeEnd.setHours(23, 59, 59, 999);
+
+      const ticket = await TicketModel.find({
+        timeStart: { $gt: timeStart, $lt: timeEnd },
+      });
+      if (ticket.length > 0) {
+        return res.status(200).json(ticket);
+      }
+      return res.sendStatus(201);
     }
-    return res.sendStatus(201);
   } catch (err) {
     console.error(err);
     return res.sendStatus(304);
@@ -42,7 +52,7 @@ export const getTicketByUser = async (req: Request, res: Response) => {
   }
 };
 
-const cancelTicketByUser = async (res: Response, req: Request) => {
+export const cancelTicketByUser = async (res: Response, req: Request) => {
   try {
     const { userID, ticketID } = req.body;
     const user = await UserModel.findById(userID);

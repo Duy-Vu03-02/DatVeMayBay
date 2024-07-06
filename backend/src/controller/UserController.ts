@@ -92,7 +92,7 @@ export const register = async (req: Request, res: Response) => {
         return res
           .status(200)
           .cookie("token", token, { httpOnly: true })
-          .json({ newUser });
+          .json(newUser);
       }
     }
     return res.sendStatus(304);
