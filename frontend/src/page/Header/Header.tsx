@@ -30,7 +30,9 @@ const Header = React.memo(() => {
 
           <div className="right-header d-flex align-items-center">
             <button className="btn m-auto">Đặt Vé</button>
-            <button className="btn m-auto mx-2">Quản Lý Vé</button>
+            <a href="/manager">
+              <button className="btn m-auto mx-2">Quản Lý Vé</button>
+            </a>
             {!userData ? (
               <>
                 <button
@@ -93,7 +95,6 @@ const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
         if (user.username?.trim() !== "" && user.password?.trim() !== "") {
           const url = "http://192.168.41.26:8080/auth/user/login";
           const result = await axios.post(url, user, { withCredentials: true });
-          console.log(result);
           setUserData(result.data);
           handleChangeShow(false);
         }
@@ -186,7 +187,6 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
           const user = infor;
           const result = await axios.post(url, user, { withCredentials: true });
 
-          console.log(result);
           if (result.status === 200) {
             setUserData(result.data);
             handleChangeShow(false);

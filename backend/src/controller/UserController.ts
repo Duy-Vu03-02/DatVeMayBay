@@ -50,7 +50,8 @@ export const loginByToken = async (req: Request, res: Response) => {
       }
 
       const payloadBase64 = token.split(".")[1];
-      const payload: any = atob(payloadBase64);
+      const payload: any = await JSON.parse(atob(payloadBase64));
+
       if (payload?.phone) {
         const user = await UserModel.findOne({ phone: payload.phone });
         if (user && user.username == payload.username) {

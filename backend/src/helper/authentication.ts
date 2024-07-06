@@ -41,7 +41,7 @@ export const genderToken = async (payload: any) => {
 
 export const verifyToken = async (token: string) => {
   try {
-    const accessSecret = process.env.ACCESS_JWT_SECRET;
+    const accessSecret = process.env.ACCESS_TOKEN_JWT;
     if (token !== null) {
       const result = await jwt.verify(token, accessSecret);
       if (result) {

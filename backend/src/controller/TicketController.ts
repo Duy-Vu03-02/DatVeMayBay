@@ -32,16 +32,15 @@ export const registerTicket = async (req: Request, res: Response) => {
     if (idTicket && idUser) {
       const ticket = await TicketModel.findById(idTicket);
       const user = await UserModel.findById(idUser);
-      console.log("cec");
-      if (ticket && user) {
-        console.log("ecec");
+
+      if (ticket && user && ticket.quantity > 0) {
         const softFlight = {
           idUser: idUser,
           idTicket: idTicket,
         };
         const newSoftFlight = await SoftFlightModel.create(softFlight);
 
-        await UserModel.findByIdAndUpdate(
+        const update = await UserModel.findByIdAndUpdate(
           idUser,
           {
             $push: {
@@ -53,6 +52,17 @@ export const registerTicket = async (req: Request, res: Response) => {
           },
           { new: true }
         );
+
+        const updateTicket = await TicketModel.findByIdAndUpdate(
+          idTicket,
+          {
+            $inc: { quantity: -1 },
+          },
+          { new: true }
+        );
+        if (newSoftFlight && update && updateTicket) {
+          return res.status(200).json({ user: update, ticket: updateTicket });
+        }
       }
     }
     return res.sendStatus(304);

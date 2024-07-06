@@ -33,14 +33,28 @@ const BookTickets = React.memo(() => {
 
   const handleBuckTicket = async (value: any) => {
     try {
-      const url = "http://192.168.41.26:8080/ticket/registerticket";
-      const data = {
-        idUser: userData._id,
-        idTicket: value,
-      };
-      const result = await axios.post(url, data);
-      console.log(result);
-      if (result.status === 200) {
+      if (true) {
+        const url = "http://192.168.41.26:8080/ticket/registerticket";
+        const data = {
+          idUser: userData._id,
+          idTicket: value,
+        };
+        const result = await axios.post(url, data);
+        console.log(result);
+        if (result.status === 200) {
+          setUserData(result.data.user);
+
+          const url = "http://192.168.41.26:8080/ticket/getallticket";
+          let currentDate = new Date(dayToSearch);
+          currentDate.setDate(currentDate.getDate());
+          const resultTicket = await axios.post(url, { time: currentDate });
+
+          if (resultTicket.status === 200) {
+            setListFly(resultTicket.data);
+          } else {
+            setListFly([]);
+          }
+        }
       }
     } catch (err) {
       console.error(err);
