@@ -3,6 +3,10 @@ import cors from "cors";
 import http from "http";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
+import { connectionDB } from "./db/index";
+import * as dotenv from "dotenv";
+dotenv.config();
+connectionDB();
 
 const app = express();
 app.use(
@@ -19,6 +23,7 @@ app.use("/", (req: Request, res: Response) => {
 });
 
 const server = http.createServer(app);
-server.listen(8080, () => {
-  console.log("POST:: 8080");
+const port = process.env.PORT;
+server.listen(port, () => {
+  console.log("POST:: ", port);
 });
