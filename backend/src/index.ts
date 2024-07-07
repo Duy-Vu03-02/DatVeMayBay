@@ -9,6 +9,7 @@ import router from "./router/index";
 import handleCornTicket from "./helper/cronTicket";
 
 dotenv.config();
+process.env.UV_THREADPOOL_SIZE = "6";
 connectionDB();
 handleCornTicket();
 

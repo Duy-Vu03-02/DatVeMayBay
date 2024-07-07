@@ -96,9 +96,8 @@ export const getTicketByUser = async (req: Request, res: Response) => {
             let temp: {} = {};
             for (let i = 0; i < listTicket.length; i++) {
               const ticket = await TicketModel.findById(listTicket[i].idTicket);
-              // console.log(ticket);
               if (ticket) {
-                temp = ticket;
+                temp = ticket.toObject();
               }
 
               if (listTicket[i].idSoftFlight) {
@@ -106,6 +105,7 @@ export const getTicketByUser = async (req: Request, res: Response) => {
                   listTicket[i].idSoftFlight
                 );
                 if (!softFlight) {
+                  temp = { ...temp, autoCancel: true };
                 }
               }
 

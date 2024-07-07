@@ -13,7 +13,6 @@ const Manager = React.memo(() => {
       const result = await axios.post(url, {}, { withCredentials: true });
       if (result.status === 200) {
         setListFly(result.data);
-        console.log(result.data);
       } else {
         setListFly([]);
       }
