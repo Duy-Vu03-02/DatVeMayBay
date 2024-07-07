@@ -105,7 +105,15 @@ export const getTicketByUser = async (req: Request, res: Response) => {
                   listTicket[i].idSoftFlight
                 );
                 if (!softFlight) {
-                  temp = { ...temp, autoCancel: true };
+                  temp = {
+                    ...temp,
+                    autoCancel: true,
+                  };
+                } else {
+                  temp = {
+                    ...temp,
+                    idSoftFlight: listTicket[i].idSoftFlight,
+                  };
                 }
               }
 
@@ -124,19 +132,16 @@ export const getTicketByUser = async (req: Request, res: Response) => {
   }
 };
 
-export const cancelTicketByUser = async (res: Response, req: Request) => {
+export const cancelTicketByUser = async (req: Request, res: Response) => {
   try {
-    const { userID, ticketID } = req.body;
-    const user = await UserModel.findById(userID);
-    if (user) {
-      const listTicket = user.flight;
-      if (listTicket.length > 0) {
-        const newList = listTicket.filter((item) => item != ticketID);
-
-        return res.status(200).json(user);
+    const { idSoftFlight } = req.body;
+    if (idSoftFlight) {
+      const update = await SoftFlightModel.findByIdAndDelete(idSoftFlight);
+      if (update) {
+        return res.sendStatus(200);
       }
     }
-    return;
+    return res.sendStatus(201);
   } catch (err) {
     console.error(err);
     return res.sendStatus(404);

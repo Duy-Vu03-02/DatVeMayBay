@@ -1,24 +1,45 @@
 import React, { useEffect, useState, Dispatch, useContext } from "react";
 import axios from "axios";
+import { UserContext } from "../../Context/UserContext";
 
 const Manager = React.memo(() => {
   const [listFly, setListFly] = useState([]);
-  const [dayToSearch, setDayToSearch] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  // const { userData, setUserData } = useContext(UserContext) as {
+  //   userData: any;
+  //   setUserData: Dispatch<any>;
+  // };
+
+  const fetchTicketByUser = async () => {
+    const url = "http://192.168.41.26:8080/ticket/getticketbyuser";
+    const result = await axios.post(url, {}, { withCredentials: true });
+    if (result.status === 200) {
+      setListFly(result.data);
+      console.log(result.data);
+    } else {
+      setListFly([]);
+    }
+  };
 
   useEffect(() => {
-    const fetch = async () => {
-      const url = "http://192.168.41.26:8080/ticket/getticketbyuser";
-      const result = await axios.post(url, {}, { withCredentials: true });
-      if (result.status === 200) {
-        setListFly(result.data);
-      } else {
-        setListFly([]);
-      }
-    };
-    fetch();
+    fetchTicketByUser();
   }, []);
+
+  const handleCancelTicket = async (value: any) => {
+    try {
+      const url = "http://192.168.41.26:8080/ticket/canceltiketbyuser";
+      const result = await axios.post(url, value, { withCredentials: true });
+
+      if (result.status === 200) {
+        fetchTicketByUser();
+      }
+      if (result.status === 201) {
+        fetchTicketByUser();
+      }
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+  };
 
   return (
     <>
@@ -49,20 +70,25 @@ const Manager = React.memo(() => {
                     <td>{item.price}</td>
                     <td>
                       {item.autoCancel ? (
-                        <button className="btn btn-secondary">
-                          Tự động hủy
-                        </button>
+                        <button className="btn btn-secondary">Đã bị hủy</button>
                       ) : (
                         <button className="btn btn-success">Thanh toán</button>
                       )}
                     </td>
                     <td>
                       {item.autoCancel ? (
-                        <button className="btn btn-secondary">
-                          Tự động hủy
-                        </button>
+                        <button className="btn btn-secondary">Đã bị hủy</button>
                       ) : (
-                        <button className="btn btn-danger">Hủy vé</button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() =>
+                            handleCancelTicket({
+                              idSoftFlight: item.idSoftFlight,
+                            })
+                          }
+                        >
+                          Hủy vé
+                        </button>
                       )}
                     </td>
                   </tr>
