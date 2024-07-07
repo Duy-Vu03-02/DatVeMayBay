@@ -4,10 +4,10 @@ import { UserContext } from "../../Context/UserContext";
 
 const Manager = React.memo(() => {
   const [listFly, setListFly] = useState([]);
-  // const { userData, setUserData } = useContext(UserContext) as {
-  //   userData: any;
-  //   setUserData: Dispatch<any>;
-  // };
+  const { userData } = useContext(UserContext) as {
+    userData: any;
+    setUserData: Dispatch<any>;
+  };
 
   const fetchTicketByUser = async () => {
     const url = "http://192.168.41.26:8080/ticket/getticketbyuser";
@@ -35,6 +35,17 @@ const Manager = React.memo(() => {
       if (result.status === 201) {
         fetchTicketByUser();
       }
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+  };
+
+  const handlePayment = async (value: any) => {
+    try {
+      const url = "http://192.168.41.26:8080/ticket/paymentticket";
+      const result = await axios.post(url, value, { withCredentials: true });
+      console.log(result);
     } catch (err) {
       console.error(err);
       return;
@@ -72,7 +83,18 @@ const Manager = React.memo(() => {
                       {item.autoCancel ? (
                         <button className="btn btn-secondary">Đã bị hủy</button>
                       ) : (
-                        <button className="btn btn-success">Thanh toán</button>
+                        <button
+                          className="btn btn-success"
+                          onClick={() =>
+                            handlePayment({
+                              idSoftFlight: item.idSoftFlight,
+                              idUser: userData._id,
+                              idTicket: item._id,
+                            })
+                          }
+                        >
+                          Thanh toán
+                        </button>
                       )}
                     </td>
                     <td>

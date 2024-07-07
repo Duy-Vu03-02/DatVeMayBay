@@ -1,9 +1,13 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { TicketModel } from "../model/TicketModel";
 import { UserModel } from "../model/UserModel";
 import { SoftFlightModel } from "../model/SoftFlight";
 import { verifyToken } from "../helper/authentication";
 import _ from "lodash";
+import config from "config";
+import dateFormat from "dateformat";
+import qs from "qs";
+import crypto from "crypto";
 
 export const getAllTicket = async (req: Request, res: Response) => {
   try {
@@ -125,7 +129,7 @@ export const getTicketByUser = async (req: Request, res: Response) => {
       }
     }
 
-    return res.sendStatus(304);
+    return res.sendStatus(204);
   } catch (err) {
     console.error(err);
     return res.sendStatus(404);
@@ -146,4 +150,154 @@ export const cancelTicketByUser = async (req: Request, res: Response) => {
     console.error(err);
     return res.sendStatus(404);
   }
+};
+
+function sortObject(obj: any) {
+  let keys = Object.keys(obj).sort();
+  let sortedObj: any = {};
+  keys.forEach((key) => {
+    sortedObj[key] = obj[key];
+  });
+  return sortedObj;
+}
+
+export const paymentTicket = async (req: Request, res: Response) => {
+  try {
+    const { idSoftFlight, idUser, idTicket } = req.body;
+    if (idSoftFlight && idUser && idTicket) {
+      const softFlight = await SoftFlightModel.findById(idSoftFlight);
+
+      if (softFlight) {
+        const user = await UserModel.findById(idUser);
+
+        if (user) {
+          const ticket = await TicketModel.findById(idTicket);
+
+          if (ticket) {
+            if (
+              softFlight.idUser.toString() === idUser.toString() &&
+              softFlight.idTicket.toString() === idTicket.toString()
+            ) {
+              //
+              //
+              let ipAddr =
+                req.headers["x-forwarded-for"] ||
+                req.socket.remoteAddress ||
+                (req.socket && req.socket.remoteAddress);
+
+              let tmnCode = config.get<string>("vnp_TmnCode");
+              let secretKey = config.get<string>("vnp_HashSecret");
+              let vnpUrl = config.get<string>("vnp_Url");
+              let returnUrl = config.get<string>("vnp_ReturnUrl");
+
+              let date = new Date();
+
+              let createDate = dateFormat(date, "yyyymmddHHmmss");
+              let orderId = dateFormat(date, "HHmmss");
+              let amount = req.body.amount as number;
+              let bankCode = req.body.bankCode as string;
+
+              let orderInfo = req.body.orderDescription as string;
+              let orderType = req.body.orderType as string;
+              let locale = req.body.language as string;
+              if (!locale || locale === "") {
+                locale = "vn";
+              }
+              let currCode = "VND";
+
+              let vnp_Params: any = {};
+              vnp_Params["vnp_Version"] = "2.1.0";
+              vnp_Params["vnp_Command"] = "pay";
+              vnp_Params["vnp_TmnCode"] = tmnCode;
+              // vnp_Params['vnp_Merchant'] = ''
+              vnp_Params["vnp_Locale"] = locale;
+              vnp_Params["vnp_CurrCode"] = currCode;
+              vnp_Params["vnp_TxnRef"] = orderId;
+              vnp_Params["vnp_OrderInfo"] = orderInfo;
+              vnp_Params["vnp_OrderType"] = orderType;
+              vnp_Params["vnp_Amount"] = amount * 100;
+              vnp_Params["vnp_ReturnUrl"] = returnUrl;
+              vnp_Params["vnp_IpAddr"] = ipAddr;
+              vnp_Params["vnp_CreateDate"] = createDate;
+              if (bankCode) {
+                vnp_Params["vnp_BankCode"] = bankCode;
+              }
+
+              vnp_Params = sortObject(vnp_Params);
+
+              let signData = qs.stringify(vnp_Params, { encode: false });
+              let hmac = crypto.createHmac("sha512", secretKey);
+              let signed = hmac
+                .update(Buffer.from(signData, "utf-8"))
+                .digest("hex");
+              vnp_Params["vnp_SecureHash"] = signed;
+              vnpUrl += "?" + qs.stringify(vnp_Params, { encode: false });
+
+              res.redirect(vnpUrl);
+            }
+          }
+        }
+      }
+    }
+
+    return res.sendStatus(304);
+  } catch (err) {
+    console.error(err);
+    return res.sendStatus(404);
+  }
+};
+
+const handlePayment = (req: Request, res: Response, next: NextFunction) => {
+  let ipAddr =
+    req.headers["x-forwarded-for"] ||
+    req.socket.remoteAddress ||
+    (req.socket && req.socket.remoteAddress);
+
+  let tmnCode = config.get<string>("vnp_TmnCode");
+  let secretKey = config.get<string>("vnp_HashSecret");
+  let vnpUrl = config.get<string>("vnp_Url");
+  let returnUrl = config.get<string>("vnp_ReturnUrl");
+
+  let date = new Date();
+
+  let createDate = dateFormat(date, "yyyymmddHHmmss");
+  let orderId = dateFormat(date, "HHmmss");
+  let amount = req.body.amount as number;
+  let bankCode = req.body.bankCode as string;
+
+  let orderInfo = req.body.orderDescription as string;
+  let orderType = req.body.orderType as string;
+  let locale = req.body.language as string;
+  if (!locale || locale === "") {
+    locale = "vn";
+  }
+  let currCode = "VND";
+
+  let vnp_Params: any = {};
+  vnp_Params["vnp_Version"] = "2.1.0";
+  vnp_Params["vnp_Command"] = "pay";
+  vnp_Params["vnp_TmnCode"] = tmnCode;
+  // vnp_Params['vnp_Merchant'] = ''
+  vnp_Params["vnp_Locale"] = locale;
+  vnp_Params["vnp_CurrCode"] = currCode;
+  vnp_Params["vnp_TxnRef"] = orderId;
+  vnp_Params["vnp_OrderInfo"] = orderInfo;
+  vnp_Params["vnp_OrderType"] = orderType;
+  vnp_Params["vnp_Amount"] = amount * 100;
+  vnp_Params["vnp_ReturnUrl"] = returnUrl;
+  vnp_Params["vnp_IpAddr"] = ipAddr;
+  vnp_Params["vnp_CreateDate"] = createDate;
+  if (bankCode) {
+    vnp_Params["vnp_BankCode"] = bankCode;
+  }
+
+  vnp_Params = sortObject(vnp_Params);
+
+  let signData = qs.stringify(vnp_Params, { encode: false });
+  let hmac = crypto.createHmac("sha512", secretKey);
+  let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+  vnp_Params["vnp_SecureHash"] = signed;
+  vnpUrl += "?" + qs.stringify(vnp_Params, { encode: false });
+
+  res.redirect(vnpUrl);
 };

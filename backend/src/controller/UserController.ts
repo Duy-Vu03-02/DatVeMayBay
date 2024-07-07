@@ -27,6 +27,7 @@ export const login = async (req: Request, res: Response) => {
         const token = await genderToken(payload);
         if (token) {
           res.cookie("token", token, {
+            domain: req.hostname,
             httpOnly: true,
             maxAge: 1000 * 60 * 60,
           });
@@ -34,6 +35,7 @@ export const login = async (req: Request, res: Response) => {
         const refetchToken = await genderRefetchToken(payload);
         if (refetchToken) {
           res.cookie("refetchToken", refetchToken, {
+            domain: req.hostname,
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 365,
           });
@@ -78,7 +80,8 @@ export const loginByToken = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   try {
     const { username, phone, account, password } = req.body;
-    if (username && phone && account && password) {
+    const regex = /^\d{9,12}$/;
+    if (username && regex.test(phone) && account && password) {
       const user = await UserModel.findOne({ phone });
       if (user) {
         return res.sendStatus(204);
@@ -114,6 +117,7 @@ export const register = async (req: Request, res: Response) => {
 
 export const logout = async (req: Request, res: Response) => {
   try {
+    res.cookie("refetchToken", {}, { maxAge: 0 });
     return res.cookie("token", {}, { maxAge: 0 }).sendStatus(200);
   } catch (err) {
     console.error(err);

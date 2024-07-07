@@ -1,10 +1,9 @@
-import React, { useState, useContext, Dispatch } from "react";
+import React, { useState, useContext, Dispatch, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./header.css";
 import { UserContext } from "../../Context/UserContext";
 import { MdClose } from "react-icons/md";
 import axios from "axios";
-import { RiH5 } from "react-icons/ri";
 
 const Header = React.memo(() => {
   const navigate = useNavigate();
@@ -13,6 +12,27 @@ const Header = React.memo(() => {
     userData: any;
     setUserData: Dispatch<any>;
   };
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const url = "http://192.168.41.26:8080/auth/user/loginByToken";
+        const result = await axios.post(url, {}, { withCredentials: true });
+        console.log(result);
+        if (result.status === 200) {
+          setUserData(result.data);
+        } else {
+          setUserData(null);
+          navigate("/");
+        }
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+    };
+    fetch();
+  }, []);
+
   const [showRegiser, setShowRegister] = useState(false);
 
   const handleChangeShowLogin = (value: boolean) => {
@@ -108,7 +128,7 @@ const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
       password: "",
     });
 
-    const { userData, setUserData } = useContext(UserContext) as {
+    const { setUserData } = useContext(UserContext) as {
       userData: any;
       setUserData: Dispatch<any>;
     };
@@ -192,7 +212,7 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
       account: "",
       password: "",
     });
-    const { userData, setUserData } = useContext(UserContext) as {
+    const { setUserData } = useContext(UserContext) as {
       userData: any;
       setUserData: Dispatch<any>;
     };

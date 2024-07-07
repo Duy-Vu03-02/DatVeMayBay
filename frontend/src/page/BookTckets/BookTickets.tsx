@@ -3,9 +3,6 @@ import { UserContext } from "../../Context/UserContext";
 import "./bookTickets.css";
 import axios from "axios";
 const BookTickets = React.memo(() => {
-  const [locationFrom, setLocationFrom] = useState("");
-  const [locationTo, setLocationTo] = useState("");
-  const [dayToFly, setDayToFly] = useState(Date());
   const [dayToSearch, setDayToSearch] = useState(
     new Date().toISOString().split("T")[0]
   );
