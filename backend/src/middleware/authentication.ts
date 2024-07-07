@@ -35,14 +35,13 @@ export const authenUser = async (
     }
   } catch (err) {
     if (err.message === "TokenExpiredError") {
+      console.log("refetch token");
       const refetchToken = req.cookies.refetchToken;
       if (refetchToken && refetchToken !== null && refetchToken.trim() !== "") {
         const verify = await verifyRefetchToken(refetchToken);
-        console.log("Verify:: ", verify);
         if (!verify) {
           return res.sendStatus(204);
         }
-        console.log("check:: s");
 
         const payloadBase64 = refetchToken.split(".")[1];
         const payload: any = await JSON.parse(atob(payloadBase64));
@@ -50,12 +49,17 @@ export const authenUser = async (
         if (payload?.phone) {
           const user = await UserModel.findOne({ phone: payload.phone });
           if (user && user.username == payload.username) {
-            const token = await genderToken(payload);
-            res.cookie("token", token, {
-              httpOnly: true,
-              maxAge: 1000 * 60 * 60,
+            const newToken = await genderToken({
+              username: payload.username,
+              phone: payload.phone,
             });
-            console.log("check");
+            if (newToken) {
+              res.cookie("token", newToken, {
+                httpOnly: true,
+                maxAge: 1000 * 60 * 60,
+              });
+            }
+            req.cookies.token = newToken;
             next();
             return;
           }

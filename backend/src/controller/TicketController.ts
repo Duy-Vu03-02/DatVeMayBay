@@ -93,10 +93,10 @@ export const getTicketByUser = async (req: Request, res: Response) => {
           const listTicket = user.flight;
           if (listTicket.length > 0) {
             let result: any[] = [];
-            let temp: any;
+            let temp: {} = {};
             for (let i = 0; i < listTicket.length; i++) {
               const ticket = await TicketModel.findById(listTicket[i].idTicket);
-              console.log(ticket);
+              // console.log(ticket);
               if (ticket) {
                 temp = ticket;
               }

@@ -31,7 +31,7 @@ export const genderToken = async (payload: any) => {
     if (payload) {
       const accessSecret = process.env.ACCESS_TOKEN_JWT;
       const token = await jwt.sign(payload, accessSecret, {
-        expiresIn: "5s",
+        expiresIn: "1h",
       });
       return token;
     }
@@ -47,7 +47,7 @@ export const genderRefetchToken = async (payload: any) => {
     if (payload) {
       const accessSecret = process.env.REFETCH_TOKEN_JWT;
       const token = await jwt.sign(payload, accessSecret, {
-        expiresIn: "60d",
+        expiresIn: "30d",
       });
       return token;
     }
