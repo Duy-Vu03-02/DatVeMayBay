@@ -27,7 +27,8 @@ export const login = async (req: Request, res: Response) => {
         const token = await genderToken(payload);
         if (token) {
           res.cookie("token", token, {
-            domain: req.hostname,
+            // domain: "datvemaybay-backend.onrender.com",
+            // path: "/",
             httpOnly: true,
             maxAge: 1000 * 60 * 60,
           });
@@ -35,7 +36,8 @@ export const login = async (req: Request, res: Response) => {
         const refetchToken = await genderRefetchToken(payload);
         if (refetchToken) {
           res.cookie("refetchToken", refetchToken, {
-            domain: req.hostname,
+            // domain: "datvemaybay-backend.onrender.com",
+            // path: "/",
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24 * 365,
           });
@@ -80,8 +82,7 @@ export const loginByToken = async (req: Request, res: Response) => {
 export const register = async (req: Request, res: Response) => {
   try {
     const { username, phone, account, password } = req.body;
-    const regex = /^\d{9,12}$/;
-    if (username && regex.test(phone) && account && password) {
+    if (username && phone && account && password) {
       const user = await UserModel.findOne({ phone });
       if (user) {
         return res.sendStatus(204);
@@ -101,11 +102,25 @@ export const register = async (req: Request, res: Response) => {
         };
 
         const token = await genderToken(payload);
+        if (token) {
+          res.cookie("token", token, {
+            // domain: "datvemaybay-backend.onrender.com",
+            // path: "/",
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60,
+          });
+        }
+        const refetchToken = await genderRefetchToken(payload);
+        if (refetchToken) {
+          res.cookie("refetchToken", refetchToken, {
+            // domain: "datvemaybay-backend.onrender.com",
+            // path: "/",
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24 * 365,
+          });
+        }
 
-        return res
-          .status(200)
-          .cookie("token", token, { httpOnly: true })
-          .json(newUser);
+        return res.status(200).json(newUser);
       }
     }
     return res.sendStatus(304);

@@ -16,9 +16,8 @@ const Header = React.memo(() => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const url = "http://192.168.41.26:8080/auth/user/loginByToken";
+        const url = "http://localhost:8080/auth/user/loginByToken";
         const result = await axios.post(url, {}, { withCredentials: true });
-        console.log(result);
         if (result.status === 200) {
           setUserData(result.data);
         } else {
@@ -43,7 +42,7 @@ const Header = React.memo(() => {
   };
   const handleLogout = async () => {
     try {
-      const url = "http://192.168.41.26:8080/auth/user/logout";
+      const url = "http://localhost:8080/auth/user/logout";
       const result = await axios.post(url, {}, { withCredentials: true });
       if (result.status === 200) {
         setUserData(null);
@@ -145,7 +144,7 @@ const Login: React.FC<{ handleChangeShow: (value: boolean) => void }> =
       try {
         const user: any = infor;
         if (user.username?.trim() !== "" && user.password?.trim() !== "") {
-          const url = "http://192.168.41.26:8080/auth/user/login";
+          const url = "http://localhost:8080/auth/user/login";
           const result = await axios.post(url, user, { withCredentials: true });
           setUserData(result.data);
           handleChangeShow(false);
@@ -234,7 +233,7 @@ const Register: React.FC<{ handleChangeShow: (value: boolean) => void }> =
           infor.username?.trim() !== "" &&
           infor.password?.trim() !== ""
         ) {
-          const url = "http://192.168.41.26:8080/auth/user/register";
+          const url = "http://localhost:8080/auth/user/register";
 
           const user = infor;
           const result = await axios.post(url, user, { withCredentials: true });

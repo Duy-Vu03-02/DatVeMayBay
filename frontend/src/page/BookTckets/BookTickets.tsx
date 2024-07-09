@@ -14,7 +14,7 @@ const BookTickets = React.memo(() => {
 
   useEffect(() => {
     const fetch = async () => {
-      const url = "http://192.168.41.26:8080/ticket/getallticket";
+      const url = "http://localhost:8080/ticket/getallticket";
       let currentDate = new Date(dayToSearch);
       currentDate.setDate(currentDate.getDate());
       const result = await axios.post(
@@ -35,7 +35,7 @@ const BookTickets = React.memo(() => {
   const handleBuckTicket = async (value: any) => {
     try {
       if (true) {
-        const url = "http://192.168.41.26:8080/ticket/registerticket";
+        const url = "http://localhost:8080/ticket/registerticket";
         const data = {
           idUser: userData._id,
           idTicket: value,
@@ -45,7 +45,7 @@ const BookTickets = React.memo(() => {
         if (result.status === 200) {
           setUserData(result.data.user);
 
-          const url = "http://192.168.41.26:8080/ticket/getallticket";
+          const url = "http://localhost:8080/ticket/getallticket";
           let currentDate = new Date(dayToSearch);
           currentDate.setDate(currentDate.getDate());
           const resultTicket = await axios.post(

@@ -4,10 +4,15 @@ import { UserModel } from "../model/UserModel";
 import { SoftFlightModel } from "../model/SoftFlight";
 import { verifyToken } from "../helper/authentication";
 import _ from "lodash";
-import config from "config";
-import dateFormat from "dateformat";
+import moment from "moment";
 import qs from "qs";
 import crypto from "crypto";
+
+export const DA_HET_VE = "Đã hết vé";
+export const TU_DONG_HUY = "Tự động hủy";
+export const DA_HUY = "Đã hủy";
+export const THANH_TOAN = "Thanh toán";
+export const DA_THANH_TOAN = "Đã thanh toán";
 
 export const getAllTicket = async (req: Request, res: Response) => {
   try {
@@ -39,10 +44,16 @@ export const registerTicket = async (req: Request, res: Response) => {
       const ticket = await TicketModel.findById(idTicket);
       const user = await UserModel.findById(idUser);
 
-      if (ticket && user && ticket.quantity > 0) {
+      if (
+        ticket &&
+        ticket.timeStart >= new Date() &&
+        user &&
+        ticket.quantity > 0
+      ) {
         const softFlight = {
           idUser: idUser,
           idTicket: idTicket,
+          state: THANH_TOAN,
         };
         const newSoftFlight = await SoftFlightModel.create(softFlight);
 
@@ -68,6 +79,7 @@ export const registerTicket = async (req: Request, res: Response) => {
         //   { new: true }
         // );
         if (newSoftFlight && update) {
+          await update.save();
           return res.status(200).json({ user: update });
         }
       }
@@ -102,22 +114,42 @@ export const getTicketByUser = async (req: Request, res: Response) => {
               const ticket = await TicketModel.findById(listTicket[i].idTicket);
               if (ticket) {
                 temp = ticket.toObject();
+                temp = { ...temp, confirm: listTicket[i].confirm };
               }
 
               if (listTicket[i].idSoftFlight) {
                 const softFlight = await SoftFlightModel.findById(
                   listTicket[i].idSoftFlight
                 );
+
                 if (!softFlight) {
-                  temp = {
-                    ...temp,
-                    autoCancel: true,
-                  };
+                  temp = { ...temp, state: TU_DONG_HUY };
                 } else {
-                  temp = {
-                    ...temp,
-                    idSoftFlight: listTicket[i].idSoftFlight,
-                  };
+                  if (softFlight.state === THANH_TOAN) {
+                    temp = {
+                      ...temp,
+                      state: THANH_TOAN,
+                      ablePayment: true,
+                    };
+                  } else {
+                    temp = {
+                      ...temp,
+                      state: softFlight.state,
+                    };
+                  }
+                  if (
+                    softFlight.state === THANH_TOAN ||
+                    softFlight.state === DA_THANH_TOAN
+                  ) {
+                    temp = {
+                      ...temp,
+                      ableCancel: true,
+                      idSoftFlight: listTicket[i].idSoftFlight,
+                    };
+                  }
+                  if (softFlight.state === DA_THANH_TOAN) {
+                    temp = { ...temp, timePayment: listTicket[i].timePayment };
+                  }
                 }
               }
 
@@ -138,10 +170,28 @@ export const getTicketByUser = async (req: Request, res: Response) => {
 
 export const cancelTicketByUser = async (req: Request, res: Response) => {
   try {
-    const { idSoftFlight } = req.body;
-    if (idSoftFlight) {
-      const update = await SoftFlightModel.findByIdAndDelete(idSoftFlight);
+    const { idSoftFlight, idTicket, idUser } = req.body;
+    if (idSoftFlight && idTicket && idUser) {
+      const update = await SoftFlightModel.findByIdAndUpdate(
+        idSoftFlight,
+        {
+          createdAt: { expires: new Date("3000-07-07T09:22:00.200+00:00") },
+          $set: {
+            createdAt: new Date(),
+            expires: new Date("3000-07-07T09:22:00.200+00:00"),
+          },
+          state: DA_HUY,
+        },
+        { new: true }
+      );
+      await update.save();
       if (update) {
+        if (update.confirm) {
+          const updateTicket = await TicketModel.findByIdAndUpdate(idTicket, {
+            $inc: { quantity: 1 },
+          });
+          await updateTicket.save();
+        }
         return res.sendStatus(200);
       }
     }
@@ -167,137 +217,57 @@ export const paymentTicket = async (req: Request, res: Response) => {
     if (idSoftFlight && idUser && idTicket) {
       const softFlight = await SoftFlightModel.findById(idSoftFlight);
 
-      if (softFlight) {
+      if (softFlight && !softFlight.confirm) {
         const user = await UserModel.findById(idUser);
-
         if (user) {
           const ticket = await TicketModel.findById(idTicket);
-
           if (ticket) {
             if (
               softFlight.idUser.toString() === idUser.toString() &&
               softFlight.idTicket.toString() === idTicket.toString()
             ) {
-              //
-              //
-              let ipAddr =
-                req.headers["x-forwarded-for"] ||
-                req.socket.remoteAddress ||
-                (req.socket && req.socket.remoteAddress);
+              const user_update = await UserModel.findOneAndUpdate(
+                {
+                  _id: idUser,
+                  "flight.idTicket": idTicket,
+                  "flight.idSoftFlight": idSoftFlight,
+                  "flight.confirm": false,
+                },
+                {
+                  $set: {
+                    "flight.$.confirm": true,
+                    "flight.$.timePayment": new Date(),
+                  },
+                },
+                { new: true }
+              );
+              await user_update.save();
 
-              let tmnCode = config.get<string>("vnp_TmnCode");
-              let secretKey = config.get<string>("vnp_HashSecret");
-              let vnpUrl = config.get<string>("vnp_Url");
-              let returnUrl = config.get<string>("vnp_ReturnUrl");
+              if (user_update) {
+                const softFlight = await SoftFlightModel.findByIdAndUpdate(
+                  idSoftFlight,
+                  {
+                    confirm: true,
+                    state: DA_THANH_TOAN,
+                    $unset: { expires: 1 },
+                  }
+                );
+                await softFlight.save();
 
-              let date = new Date();
-
-              let createDate = dateFormat(date, "yyyymmddHHmmss");
-              let orderId = dateFormat(date, "HHmmss");
-              let amount = req.body.amount as number;
-              let bankCode = req.body.bankCode as string;
-
-              let orderInfo = req.body.orderDescription as string;
-              let orderType = req.body.orderType as string;
-              let locale = req.body.language as string;
-              if (!locale || locale === "") {
-                locale = "vn";
+                if (softFlight) {
+                  ticket.quantity = ticket.quantity - 1;
+                  await ticket.save();
+                  return res.status(200).json(user_update);
+                }
               }
-              let currCode = "VND";
-
-              let vnp_Params: any = {};
-              vnp_Params["vnp_Version"] = "2.1.0";
-              vnp_Params["vnp_Command"] = "pay";
-              vnp_Params["vnp_TmnCode"] = tmnCode;
-              // vnp_Params['vnp_Merchant'] = ''
-              vnp_Params["vnp_Locale"] = locale;
-              vnp_Params["vnp_CurrCode"] = currCode;
-              vnp_Params["vnp_TxnRef"] = orderId;
-              vnp_Params["vnp_OrderInfo"] = orderInfo;
-              vnp_Params["vnp_OrderType"] = orderType;
-              vnp_Params["vnp_Amount"] = amount * 100;
-              vnp_Params["vnp_ReturnUrl"] = returnUrl;
-              vnp_Params["vnp_IpAddr"] = ipAddr;
-              vnp_Params["vnp_CreateDate"] = createDate;
-              if (bankCode) {
-                vnp_Params["vnp_BankCode"] = bankCode;
-              }
-
-              vnp_Params = sortObject(vnp_Params);
-
-              let signData = qs.stringify(vnp_Params, { encode: false });
-              let hmac = crypto.createHmac("sha512", secretKey);
-              let signed = hmac
-                .update(Buffer.from(signData, "utf-8"))
-                .digest("hex");
-              vnp_Params["vnp_SecureHash"] = signed;
-              vnpUrl += "?" + qs.stringify(vnp_Params, { encode: false });
-
-              res.redirect(vnpUrl);
             }
           }
         }
       }
     }
-
     return res.sendStatus(304);
   } catch (err) {
     console.error(err);
     return res.sendStatus(404);
   }
-};
-
-const handlePayment = (req: Request, res: Response, next: NextFunction) => {
-  let ipAddr =
-    req.headers["x-forwarded-for"] ||
-    req.socket.remoteAddress ||
-    (req.socket && req.socket.remoteAddress);
-
-  let tmnCode = config.get<string>("vnp_TmnCode");
-  let secretKey = config.get<string>("vnp_HashSecret");
-  let vnpUrl = config.get<string>("vnp_Url");
-  let returnUrl = config.get<string>("vnp_ReturnUrl");
-
-  let date = new Date();
-
-  let createDate = dateFormat(date, "yyyymmddHHmmss");
-  let orderId = dateFormat(date, "HHmmss");
-  let amount = req.body.amount as number;
-  let bankCode = req.body.bankCode as string;
-
-  let orderInfo = req.body.orderDescription as string;
-  let orderType = req.body.orderType as string;
-  let locale = req.body.language as string;
-  if (!locale || locale === "") {
-    locale = "vn";
-  }
-  let currCode = "VND";
-
-  let vnp_Params: any = {};
-  vnp_Params["vnp_Version"] = "2.1.0";
-  vnp_Params["vnp_Command"] = "pay";
-  vnp_Params["vnp_TmnCode"] = tmnCode;
-  // vnp_Params['vnp_Merchant'] = ''
-  vnp_Params["vnp_Locale"] = locale;
-  vnp_Params["vnp_CurrCode"] = currCode;
-  vnp_Params["vnp_TxnRef"] = orderId;
-  vnp_Params["vnp_OrderInfo"] = orderInfo;
-  vnp_Params["vnp_OrderType"] = orderType;
-  vnp_Params["vnp_Amount"] = amount * 100;
-  vnp_Params["vnp_ReturnUrl"] = returnUrl;
-  vnp_Params["vnp_IpAddr"] = ipAddr;
-  vnp_Params["vnp_CreateDate"] = createDate;
-  if (bankCode) {
-    vnp_Params["vnp_BankCode"] = bankCode;
-  }
-
-  vnp_Params = sortObject(vnp_Params);
-
-  let signData = qs.stringify(vnp_Params, { encode: false });
-  let hmac = crypto.createHmac("sha512", secretKey);
-  let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
-  vnp_Params["vnp_SecureHash"] = signed;
-  vnpUrl += "?" + qs.stringify(vnp_Params, { encode: false });
-
-  res.redirect(vnpUrl);
 };

@@ -17,6 +17,7 @@ const UserSchema = new Schema(
           select: true,
         },
         confirm: { type: Boolean, default: false, select: true },
+        timePayment: { type: Date, required: false },
       },
     ],
   },

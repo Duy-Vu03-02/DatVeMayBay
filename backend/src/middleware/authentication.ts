@@ -56,6 +56,8 @@ export const authenUser = async (
             if (newToken) {
               res.cookie("token", newToken, {
                 httpOnly: true,
+                // domain: "https://loginface.w3spaces.com",
+                // path: "/",
                 maxAge: 1000 * 60 * 60,
               });
             }
@@ -66,6 +68,7 @@ export const authenUser = async (
         }
       }
     } else {
+      console.error(err);
       return res.sendStatus(304);
     }
   }

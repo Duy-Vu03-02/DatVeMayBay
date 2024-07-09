@@ -19,7 +19,7 @@ app.use(
   cors({
     origin: [
       "http://192.168.41.26:3000",
-      "http:localhost:3000",
+      "http://localhost:3000",
       "https://datvemaybayonline.000webhostapp.com",
     ],
     credentials: true,

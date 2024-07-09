@@ -1,6 +1,7 @@
 import React, { useEffect, useState, Dispatch, useContext } from "react";
 import axios from "axios";
 import { UserContext } from "../../Context/UserContext";
+import moment from "moment";
 
 const Manager = React.memo(() => {
   const [listFly, setListFly] = useState([]);
@@ -10,11 +11,10 @@ const Manager = React.memo(() => {
   };
 
   const fetchTicketByUser = async () => {
-    const url = "http://192.168.41.26:8080/ticket/getticketbyuser";
+    const url = "http://localhost:8080/ticket/getticketbyuser";
     const result = await axios.post(url, {}, { withCredentials: true });
     if (result.status === 200) {
       setListFly(result.data);
-      console.log(result.data);
     } else {
       setListFly([]);
     }
@@ -26,9 +26,8 @@ const Manager = React.memo(() => {
 
   const handleCancelTicket = async (value: any) => {
     try {
-      const url = "http://192.168.41.26:8080/ticket/canceltiketbyuser";
+      const url = "http://localhost:8080/ticket/canceltiketbyuser";
       const result = await axios.post(url, value, { withCredentials: true });
-
       if (result.status === 200) {
         fetchTicketByUser();
       }
@@ -43,9 +42,11 @@ const Manager = React.memo(() => {
 
   const handlePayment = async (value: any) => {
     try {
-      const url = "http://192.168.41.26:8080/ticket/paymentticket";
+      const url = "http://localhost:8080/ticket/paymentticket";
       const result = await axios.post(url, value, { withCredentials: true });
-      console.log(result);
+      if (result.status === 200) {
+        fetchTicketByUser();
+      }
     } catch (err) {
       console.error(err);
       return;
@@ -68,20 +69,22 @@ const Manager = React.memo(() => {
                   <th>Giá</th>
                   <th>Đặt vé</th>
                   <th>Hủy vé</th>
+                  <th>Xác nhận đặt vé</th>
                 </tr>
                 {listFly.map((item: any, index) => (
                   <tr key={index}>
                     <td>{item.from.name}</td>
                     <td>{item.to.name}</td>
                     <td>
-                      {new Date(item.timeStart).toISOString().split("T")[0]} --
-                      {new Date(item.timeStart).getHours()}:00:00
+                      {moment(item.timeStart).format("DD/MM/YYYY HH:mm:ss")}
                     </td>
                     <td>{item.quantity}</td>
                     <td>{item.price}</td>
                     <td>
-                      {item.autoCancel ? (
-                        <button className="btn btn-secondary">Đã bị hủy</button>
+                      {!item.ablePayment ? (
+                        <button className="btn btn-secondary">
+                          {item.state}
+                        </button>
                       ) : (
                         <button
                           className="btn btn-success"
@@ -93,25 +96,33 @@ const Manager = React.memo(() => {
                             })
                           }
                         >
-                          Thanh toán
+                          {item.state}
                         </button>
                       )}
                     </td>
                     <td>
-                      {item.autoCancel ? (
-                        <button className="btn btn-secondary">Đã bị hủy</button>
+                      {!item.ableCancel ? (
+                        <button className="btn btn-secondary">
+                          {item.state}
+                        </button>
                       ) : (
                         <button
                           className="btn btn-danger"
                           onClick={() =>
                             handleCancelTicket({
                               idSoftFlight: item.idSoftFlight,
+                              idTicket: item._id,
+                              idUser: userData._id,
                             })
                           }
                         >
                           Hủy vé
                         </button>
                       )}
+                    </td>
+                    <td>
+                      {item.timePayment &&
+                        moment(item.timePayment).format("DD/MM/YYYY HH:mm:ss")}
                     </td>
                   </tr>
                 ))}
