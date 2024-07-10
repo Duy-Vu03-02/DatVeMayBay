@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { THANH_TOAN } from "../controller/TicketController";
 
 const UserSchema = new Schema(
   {
@@ -15,6 +16,12 @@ const UserSchema = new Schema(
           type: Schema.Types.ObjectId,
           ref: "SoftFlight",
           select: true,
+        },
+        state: {
+          type: String,
+          default: THANH_TOAN,
+          select: true,
+          required: true,
         },
         confirm: { type: Boolean, default: false, select: true },
         timePayment: { type: Date, required: false },

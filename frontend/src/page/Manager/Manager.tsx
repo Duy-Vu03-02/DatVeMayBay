@@ -14,6 +14,7 @@ const Manager = React.memo(() => {
     const url = "http://localhost:8080/ticket/getticketbyuser";
     const result = await axios.post(url, {}, { withCredentials: true });
     if (result.status === 200) {
+      console.log(result);
       setListFly(result.data);
     } else {
       setListFly([]);

@@ -12,22 +12,26 @@ const BookTickets = React.memo(() => {
     setUserData: Dispatch<any>;
   };
 
+  const fetch_db = async () => {
+    const url = "http://localhost:8080/ticket/getallticket";
+    let currentDate = new Date(dayToSearch);
+    currentDate.setDate(currentDate.getDate());
+    const result = await axios.post(
+      url,
+      { time: currentDate },
+      { withCredentials: true }
+    );
+
+    if (result.status === 200) {
+      setListFly(result.data);
+    } else {
+      setListFly([]);
+    }
+  };
+
   useEffect(() => {
     const fetch = async () => {
-      const url = "http://localhost:8080/ticket/getallticket";
-      let currentDate = new Date(dayToSearch);
-      currentDate.setDate(currentDate.getDate());
-      const result = await axios.post(
-        url,
-        { time: currentDate },
-        { withCredentials: true }
-      );
-
-      if (result.status === 200) {
-        setListFly(result.data);
-      } else {
-        setListFly([]);
-      }
+      await fetch_db();
     };
     fetch();
   }, [dayToSearch]);
@@ -41,24 +45,10 @@ const BookTickets = React.memo(() => {
           idTicket: value,
         };
         const result = await axios.post(url, data, { withCredentials: true });
-        console.log(result);
+
         if (result.status === 200) {
           setUserData(result.data.user);
-
-          const url = "http://localhost:8080/ticket/getallticket";
-          let currentDate = new Date(dayToSearch);
-          currentDate.setDate(currentDate.getDate());
-          const resultTicket = await axios.post(
-            url,
-            { time: currentDate },
-            { withCredentials: true }
-          );
-
-          if (resultTicket.status === 200) {
-            setListFly(resultTicket.data);
-          } else {
-            setListFly([]);
-          }
+          fetch_db();
         }
       }
     } catch (err) {
@@ -88,6 +78,7 @@ const BookTickets = React.memo(() => {
                   <th>Từ</th>
                   <th>Đến</th>
                   <th>Ngày</th>
+                  <th>Số lượng</th>
                   <th>Tình trạng</th>
                   <th>Giá</th>
                   <th>Đặt vé</th>
@@ -101,6 +92,13 @@ const BookTickets = React.memo(() => {
                       {new Date(item.timeStart).getHours()}:00:00
                     </td>
                     <td>{item.quantity}</td>
+                    <td>
+                      {item.quantity > 0 ? (
+                        <p className="bg-success">Còn vé</p>
+                      ) : (
+                        <p className="bg-body-secondary">Hết vé</p>
+                      )}
+                    </td>
                     <td>{item.price}</td>
                     <td>
                       {userData &&
@@ -111,7 +109,11 @@ const BookTickets = React.memo(() => {
                       ) : (
                         <button
                           onClick={() => handleBuckTicket(item._id)}
-                          className="btn btn-success"
+                          className={
+                            item.quantity > 0
+                              ? "btn btn-success"
+                              : "btn btn-secondary"
+                          }
                         >
                           Đặt vé
                         </button>

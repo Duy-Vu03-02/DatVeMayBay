@@ -29,6 +29,19 @@ const handleCornTicket = async () => {
                   quantity: 10,
                 };
                 await TicketModel.create(ticket);
+
+                const lastCurrent = new Date();
+                lastCurrent.setDate(currentDate.getDate() - 1);
+
+                const lastTicket = await TicketModel.find({
+                  timeStart: lastCurrent,
+                });
+                if (lastTicket && lastTicket.length > 0) {
+                  await TicketModel.updateMany(
+                    { _id: { $in: lastTicket.map((ticket) => ticket._id) } },
+                    { $set: { quantity: 0 } }
+                  );
+                }
               }
             }
           }
